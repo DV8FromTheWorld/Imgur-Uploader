@@ -15,6 +15,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Drawing.Imaging;
 using Image_Viewer;
+using Screen_Capture;
 
 namespace Imgur_Uploader
 {
@@ -114,6 +115,11 @@ namespace Imgur_Uploader
             ShowProgram();
         }
 
+        private void notifyIconMenu_Opening(object sender, CancelEventArgs e)
+        {
+            UploadButtonStatus(sender, e);
+        }
+
         private void UploadButtonStatus(object sender, EventArgs e)
         {
             if (Clipboard.ContainsImage())
@@ -172,6 +178,11 @@ namespace Imgur_Uploader
         private void btnPreview_Click(object sender, EventArgs e)
         {
             new ImagePreview(Clipboard.GetImage()).Show();
+        }
+
+        private void btnCapture_Click(object sender, EventArgs e)
+        {
+            new ScreenCapture().Show();
         }
     }
 }

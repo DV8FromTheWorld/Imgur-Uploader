@@ -43,6 +43,7 @@ namespace Imgur_Uploader
             this.menuExit = new System.Windows.Forms.ToolStripMenuItem();
             this.lblUploadMessage = new System.Windows.Forms.Label();
             this.btnPreview = new System.Windows.Forms.Button();
+            this.btnCapture = new System.Windows.Forms.Button();
             this.notifyIconMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -88,7 +89,7 @@ namespace Imgur_Uploader
             // btnCopyLink
             // 
             this.btnCopyLink.Enabled = false;
-            this.btnCopyLink.Location = new System.Drawing.Point(164, 208);
+            this.btnCopyLink.Location = new System.Drawing.Point(152, 208);
             this.btnCopyLink.Name = "btnCopyLink";
             this.btnCopyLink.Size = new System.Drawing.Size(108, 23);
             this.btnCopyLink.TabIndex = 4;
@@ -112,6 +113,7 @@ namespace Imgur_Uploader
             this.menuExit});
             this.notifyIconMenu.Name = "notifyIconMenu";
             this.notifyIconMenu.Size = new System.Drawing.Size(113, 70);
+            this.notifyIconMenu.Opening += new System.ComponentModel.CancelEventHandler(notifyIconMenu_Opening);
             // 
             // menuShow
             // 
@@ -155,11 +157,22 @@ namespace Imgur_Uploader
             this.btnPreview.UseVisualStyleBackColor = true;
             this.btnPreview.Click += new System.EventHandler(this.btnPreview_Click);
             // 
+            // btnCapture
+            // 
+            this.btnCapture.Location = new System.Drawing.Point(79, 140);
+            this.btnCapture.Name = "btnCapture";
+            this.btnCapture.Size = new System.Drawing.Size(133, 23);
+            this.btnCapture.TabIndex = 7;
+            this.btnCapture.Text = "Custom Screen Capture";
+            this.btnCapture.UseVisualStyleBackColor = true;
+            this.btnCapture.Click += new System.EventHandler(this.btnCapture_Click);
+            // 
             // UploaderFrame
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(284, 262);
+            this.Controls.Add(this.btnCapture);
             this.Controls.Add(this.btnPreview);
             this.Controls.Add(this.lblUploadMessage);
             this.Controls.Add(this.btnCopyLink);
@@ -196,6 +209,7 @@ namespace Imgur_Uploader
         private System.Windows.Forms.ToolStripMenuItem menuExit;
         private Label lblUploadMessage;
         private Button btnPreview;
+        private Button btnCapture;
     }
 }
 
