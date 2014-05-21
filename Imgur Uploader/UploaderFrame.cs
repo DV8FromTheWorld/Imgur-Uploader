@@ -67,6 +67,8 @@ namespace Imgur_Uploader
                     lblLink.Text = url;
                     btnUpload.Enabled = true;
                     menuUpload.Enabled = true;
+                    btnBrowser.Enabled = true;
+                    btnCopyLink.Enabled = true;
                 });
         }
 
@@ -87,12 +89,12 @@ namespace Imgur_Uploader
 
         private void btnBrowser_Click(object sender, EventArgs e)
         {
-            Process.Start(lblLink.Text);
+            Process.Start(url);
         }
 
         private void btnCopyLink_Click(object sender, EventArgs e)
         {
-            Clipboard.SetText(lblLink.Text);
+            Clipboard.SetText(url);
             UploadButtonStatus(sender, e);
         }
 
@@ -158,6 +160,8 @@ namespace Imgur_Uploader
             uploader.RunWorkerAsync(ms);
             btnUpload.Enabled = false;
             menuUpload.Enabled = false;
+            btnBrowser.Enabled = false;
+            btnCopyLink.Enabled = false;
         }
         
         private void menuExit_Click(object sender, EventArgs e)

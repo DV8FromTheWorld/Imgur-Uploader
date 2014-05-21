@@ -76,6 +76,7 @@ namespace Imgur_Uploader
             // 
             // btnBrowser
             // 
+            this.btnBrowser.Enabled = false;
             this.btnBrowser.Location = new System.Drawing.Point(15, 208);
             this.btnBrowser.Name = "btnBrowser";
             this.btnBrowser.Size = new System.Drawing.Size(105, 23);
@@ -86,6 +87,7 @@ namespace Imgur_Uploader
             // 
             // btnCopyLink
             // 
+            this.btnCopyLink.Enabled = false;
             this.btnCopyLink.Location = new System.Drawing.Point(164, 208);
             this.btnCopyLink.Name = "btnCopyLink";
             this.btnCopyLink.Size = new System.Drawing.Size(108, 23);
