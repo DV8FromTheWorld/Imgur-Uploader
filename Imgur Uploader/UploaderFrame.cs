@@ -31,6 +31,8 @@ namespace Imgur_Uploader
         private const String CLIENT_SECRET = "bc038b940212ad28e0de3eddea1a18375434b143";     
 
         private BackgroundWorker uploader;
+        private BackgroundWorker uploaderAlbum;
+        private List<Image> imagesToUpload;
         private String url;
 
         public UploaderFrame()
@@ -40,6 +42,7 @@ namespace Imgur_Uploader
 
         private void UploaderFrame_Load(object sender, EventArgs e)
         {
+            imagesToUpload = new List<Image>();
             uploader = new BackgroundWorker();
             uploader.WorkerSupportsCancellation = true;
             uploader.DoWork += new DoWorkEventHandler(
@@ -122,7 +125,7 @@ namespace Imgur_Uploader
 
         private void UploadButtonStatus(object sender, EventArgs e)
         {
-            if (Clipboard.ContainsImage())
+            if (ClipboardContainsImage())
             {
                 btnUpload.Enabled = true;
                 menuUpload.Enabled = true;
@@ -162,12 +165,14 @@ namespace Imgur_Uploader
         {
             lblLink.Text = "Uploading and fetching URL...";
             MemoryStream ms = new MemoryStream();
-            Clipboard.GetImage().Save(ms, ImageFormat.Png);
+            loadImages();
+            imagesToUpload[0].Save(ms, ImageFormat.Png);
             uploader.RunWorkerAsync(ms);
             btnUpload.Enabled = false;
             menuUpload.Enabled = false;
             btnBrowser.Enabled = false;
             btnCopyLink.Enabled = false;
+            imagesToUpload.Clear();
         }
         
         private void menuExit_Click(object sender, EventArgs e)
@@ -183,6 +188,48 @@ namespace Imgur_Uploader
         private void btnCapture_Click(object sender, EventArgs e)
         {
             new ScreenCapture().Show();
+        }
+        /// <summary>
+        /// Checks to see if there is an image or a collection of images to upload.
+        /// </summary>
+        /// <returns>true if there are images to upload.</returns>
+        private bool ClipboardContainsImage()
+        {
+            loadImages();
+            int count = imagesToUpload.Count;
+            imagesToUpload.Clear(); //Clear this to unlock the images (can't delete/rename/move without this).
+            return count == 1;
+        }
+
+        /// <summary>
+        /// Takes all images given and loads them into a List in preparation for upload.
+        /// </summary>
+        private void loadImages()
+        {
+            imagesToUpload.Clear();
+            if (Clipboard.ContainsImage())
+            {
+                imagesToUpload.Add(Clipboard.GetImage());
+                return;
+            }
+
+            IDataObject d = Clipboard.GetDataObject();
+            if (d.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] copiedFiles = (String[])d.GetData(DataFormats.FileDrop);
+                foreach (string filePath in copiedFiles)
+                {
+                    try
+                    {
+                        imagesToUpload.Add(Image.FromFile(@filePath));
+                    }
+                    catch (Exception)
+                    {
+                        //Do Nothing
+                    }
+                }
+                return;
+            }
         }
     }
 }
