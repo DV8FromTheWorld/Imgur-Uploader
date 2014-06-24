@@ -166,7 +166,8 @@ namespace Imgur_Uploader
             lblLink.Text = "Uploading and fetching URL...";
             MemoryStream ms = new MemoryStream();
             loadImages();
-            imagesToUpload[0].Save(ms, ImageFormat.Png);
+            ImageFormat format = imagesToUpload[0].RawFormat;
+            imagesToUpload[0].Save(ms, format.Equals(ImageFormat.MemoryBmp) ? ImageFormat.Png : format);
             uploader.RunWorkerAsync(ms);
             btnUpload.Enabled = false;
             menuUpload.Enabled = false;
@@ -182,7 +183,9 @@ namespace Imgur_Uploader
 
         private void btnPreview_Click(object sender, EventArgs e)
         {
-            new ImagePreview(Clipboard.GetImage()).Show();
+            loadImages();
+            new ImagePreview(imagesToUpload[0]).Show();
+            imagesToUpload.Clear();
         }
 
         private void btnCapture_Click(object sender, EventArgs e)
