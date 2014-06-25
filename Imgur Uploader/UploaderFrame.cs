@@ -83,6 +83,25 @@ namespace Imgur_Uploader
                 });
         }
 
+        public int GetImageAmount()
+        {
+            return imagesToUpload.Count;
+        }
+
+        public Image GetImage(int index)
+        {
+            if (index >= 0 && index < imagesToUpload.Count)
+            {
+                return imagesToUpload[index];
+            }
+            return null;
+        }
+
+        public void ClearImages()
+        {
+            imagesToUpload.Clear();
+        }
+
         private void UploaderFrame_Resize(object sender, EventArgs e)
         {
             if (this.WindowState == FormWindowState.Minimized && Screen.GetWorkingArea(this).Contains(MousePosition))
@@ -136,9 +155,8 @@ namespace Imgur_Uploader
 
         private void btnPreview_Click(object sender, EventArgs e)
         {
-            loadImages();
-            new ImagePreview(imagesToUpload[0]).Show();
-            imagesToUpload.Clear();
+            LoadImages();
+            new ImagePreview(this, GetImage(0)).Show();
         }
 
         private void btnCapture_Click(object sender, EventArgs e)
@@ -189,7 +207,7 @@ namespace Imgur_Uploader
 
         private void Upload()
         {
-            loadImages();
+            LoadImages();
             if (imagesToUpload.Count > 1)
             {
                 lblLink.Text = "Uploading " + imagesToUpload.Count + " images..."
@@ -236,7 +254,7 @@ namespace Imgur_Uploader
         /// <returns>true if there are images to upload.</returns>
         private bool ClipboardContainsImage()
         {
-            loadImages();
+            LoadImages();
             int count = imagesToUpload.Count;            
             imagesToUpload.Clear(); //Clear this to unlock the images (can't delete/rename/move without this).
             return count > 0;
@@ -245,7 +263,7 @@ namespace Imgur_Uploader
         /// <summary>
         /// Takes all images given and loads them into a List in preparation for upload.
         /// </summary>
-        private void loadImages()
+        private void LoadImages()
         {
             imagesToUpload.Clear();
             if (Clipboard.ContainsImage())
