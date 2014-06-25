@@ -29,7 +29,6 @@ namespace Imgur_Uploader
         private List<Image> imagesToUpload;
         private List<String> albumIds;
         private String url;
-        private bool album;
         private bool uploading;
 
         public UploaderFrame()
@@ -78,6 +77,7 @@ namespace Imgur_Uploader
             uploaderAlbum.RunWorkerCompleted += new RunWorkerCompletedEventHandler(
                 delegate(object o, RunWorkerCompletedEventArgs args)
                 {
+                    albumIds.Clear();
                     UploadComplete();
                     lblLink.Text = url;
                 });
@@ -190,7 +190,7 @@ namespace Imgur_Uploader
         private void Upload()
         {
             loadImages();
-            if (album)
+            if (imagesToUpload.Count > 1)
             {
                 lblLink.Text = "Uploading " + imagesToUpload.Count + " images..."
                     + " Completed: 0%";
@@ -202,6 +202,7 @@ namespace Imgur_Uploader
                 uploader.RunWorkerAsync();
             }
             btnUpload.Enabled = false;
+            btnPreview.Enabled = false;
             menuUpload.Enabled = false;
             btnBrowser.Enabled = false;
             btnCopyLink.Enabled = false;
@@ -211,8 +212,7 @@ namespace Imgur_Uploader
         {
             uploading = false;
             lblLink.Text = url;
-            btnUpload.Enabled = true;
-            menuUpload.Enabled = true;
+            UploadButtonStatus(null, null);
             btnBrowser.Enabled = true;
             btnCopyLink.Enabled = true;
             imagesToUpload.Clear();
@@ -237,8 +237,7 @@ namespace Imgur_Uploader
         private bool ClipboardContainsImage()
         {
             loadImages();
-            int count = imagesToUpload.Count;
-            album = count > 1 ? true : false;
+            int count = imagesToUpload.Count;            
             imagesToUpload.Clear(); //Clear this to unlock the images (can't delete/rename/move without this).
             return count > 0;
         }
