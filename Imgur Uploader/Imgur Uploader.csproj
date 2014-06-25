@@ -64,6 +64,7 @@
     <Compile Include="ScreenCapture.Designer.cs">
       <DependentUpon>ScreenCapture.cs</DependentUpon>
     </Compile>
+    <Compile Include="Uploader.cs" />
     <Compile Include="UploaderFrame.cs">
       <SubType>Form</SubType>
     </Compile>

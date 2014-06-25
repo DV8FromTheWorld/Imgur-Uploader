@@ -24,16 +24,13 @@ namespace Imgur_Uploader
     //Selection area for screenshot.
     public partial class UploaderFrame : Form
     {
-        //CHANGE TO @CLIENT_ID@ and replace with buildscript.
-        private const String CLIENT_ID = "efce6070269a7f1";
-
-        //CHANGE TO @CLIENT_SECRET@ and replace with buildscript.
-        private const String CLIENT_SECRET = "bc038b940212ad28e0de3eddea1a18375434b143";     
-
         private BackgroundWorker uploader;
         private BackgroundWorker uploaderAlbum;
         private List<Image> imagesToUpload;
+        private List<String> albumIds;
         private String url;
+        private bool album;
+        private bool uploading;
 
         public UploaderFrame()
         {
@@ -43,37 +40,46 @@ namespace Imgur_Uploader
         private void UploaderFrame_Load(object sender, EventArgs e)
         {
             imagesToUpload = new List<Image>();
+            albumIds = new List<String>();
             uploader = new BackgroundWorker();
-            uploader.WorkerSupportsCancellation = true;
             uploader.DoWork += new DoWorkEventHandler(
                 delegate(object o, DoWorkEventArgs args)
                 {
-                    MemoryStream ms = args.Argument as MemoryStream;
-
-                    WebClientEx w = new WebClientEx();
-                    w.timeout = 100000;
-                    w.Headers.Add("Authorization", "Client-ID " + CLIENT_ID);
-
-
-                    NameValueCollection values = new NameValueCollection
-                    {
-                        { "image", Convert.ToBase64String(ms.ToArray()) }
-                    };
-
-                    byte[] response = w.UploadValues("https://api.imgur.com/3/image", values);
-                    dynamic result = Encoding.ASCII.GetString(response);
-                    System.Text.RegularExpressions.Regex reg = new System.Text.RegularExpressions.Regex("link\":\"(.*?)\"");
-                    url = reg.Match(result).ToString().Replace("link\":\"", "").Replace("\"", "").Replace("\\/", "/"); 
+                    uploading = true;
+                    url = GetLink(Uploader.Upload(imagesToUpload[0]));
                 });
 
             uploader.RunWorkerCompleted += new RunWorkerCompletedEventHandler(
                 delegate(object o, RunWorkerCompletedEventArgs args)
                 {
+                    UploadComplete();
+                });
+
+            uploaderAlbum = new BackgroundWorker();
+            uploaderAlbum.WorkerReportsProgress = true;
+            uploaderAlbum.DoWork += new DoWorkEventHandler(
+                delegate(object o, DoWorkEventArgs args)
+                {
+                    uploading = true;
+                    for (int i = 0; i < imagesToUpload.Count; i++)
+                    {
+                        albumIds.Add(GetId(Uploader.Upload(imagesToUpload[i])));
+                        uploaderAlbum.ReportProgress((int)(((double)i / imagesToUpload.Count) * 100));
+                    }
+                    url = "https://imgur.com/a/" + GetId(Uploader.CreateAlbum(albumIds));
+
+                });
+            uploaderAlbum.ProgressChanged +=new ProgressChangedEventHandler(
+                delegate(object o, ProgressChangedEventArgs args)
+                {
+                    lblLink.Text = "Uploading " + imagesToUpload.Count + " images..."
+                    + " Completed: " + args.ProgressPercentage + "%";
+                });
+            uploaderAlbum.RunWorkerCompleted += new RunWorkerCompletedEventHandler(
+                delegate(object o, RunWorkerCompletedEventArgs args)
+                {
+                    UploadComplete();
                     lblLink.Text = url;
-                    btnUpload.Enabled = true;
-                    menuUpload.Enabled = true;
-                    btnBrowser.Enabled = true;
-                    btnCopyLink.Enabled = true;
                 });
         }
 
@@ -123,26 +129,45 @@ namespace Imgur_Uploader
         {
             UploadButtonStatus(sender, e);
         }
+        private void menuExit_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void btnPreview_Click(object sender, EventArgs e)
+        {
+            loadImages();
+            new ImagePreview(imagesToUpload[0]).Show();
+            imagesToUpload.Clear();
+        }
+
+        private void btnCapture_Click(object sender, EventArgs e)
+        {
+            new ScreenCapture().Show();
+        }
 
         private void UploadButtonStatus(object sender, EventArgs e)
         {
-            if (ClipboardContainsImage())
+            if (!uploading)
             {
-                btnUpload.Enabled = true;
-                menuUpload.Enabled = true;
-                btnPreview.Enabled = true;
-                lblUploadMessage.Text = "";
-            }
-            else
-            {
-                btnUpload.Enabled = false;
-                menuUpload.Enabled = false;
-                btnPreview.Enabled = false;
-                lblUploadMessage.Text = "Upload and Preview Buttons are disabled \nuntil an image is in the Clipboard.";
+                if (ClipboardContainsImage())
+                {
+                    btnUpload.Enabled = true;
+                    menuUpload.Enabled = true;
+                    btnPreview.Enabled = true;
+                    lblUploadMessage.Text = "";
+                }
+                else
+                {
+                    btnUpload.Enabled = false;
+                    menuUpload.Enabled = false;
+                    btnPreview.Enabled = false;
+                    lblUploadMessage.Text = "Upload and Preview Buttons are disabled \nuntil an image is in the Clipboard.";
+                }
             }
         }
 
-        private void ConfirmClose(object sender, FormClosingEventArgs  e)
+        private void ConfirmClose(object sender, FormClosingEventArgs e)
         {
             DialogResult result = MessageBox.Show("Are you sure you want to close Imgur Uploader?", "Confirm Exit", MessageBoxButtons.YesNo);
             if (result.Equals(DialogResult.Yes))
@@ -164,35 +189,47 @@ namespace Imgur_Uploader
 
         private void Upload()
         {
-            lblLink.Text = "Uploading and fetching URL...";
-            MemoryStream ms = new MemoryStream();
             loadImages();
-            ImageFormat format = imagesToUpload[0].RawFormat;
-            imagesToUpload[0].Save(ms, format.Equals(ImageFormat.MemoryBmp) ? ImageFormat.Png : format);
-            uploader.RunWorkerAsync(ms);
+            if (album)
+            {
+                lblLink.Text = "Uploading " + imagesToUpload.Count + " images..."
+                    + " Completed: 0%";
+                uploaderAlbum.RunWorkerAsync();
+            }
+            else
+            {
+                lblLink.Text = "Uploading and fetching URL...";
+                uploader.RunWorkerAsync();
+            }
             btnUpload.Enabled = false;
             menuUpload.Enabled = false;
             btnBrowser.Enabled = false;
             btnCopyLink.Enabled = false;
-            imagesToUpload.Clear();
-        }
-        
-        private void menuExit_Click(object sender, EventArgs e)
-        {
-            this.Close();
         }
 
-        private void btnPreview_Click(object sender, EventArgs e)
+        private void UploadComplete()
         {
-            loadImages();
-            new ImagePreview(imagesToUpload[0]).Show();
+            uploading = false;
+            lblLink.Text = url;
+            btnUpload.Enabled = true;
+            menuUpload.Enabled = true;
+            btnBrowser.Enabled = true;
+            btnCopyLink.Enabled = true;
             imagesToUpload.Clear();
         }
 
-        private void btnCapture_Click(object sender, EventArgs e)
+        private String GetLink(String jsonResponse)
         {
-            new ScreenCapture().Show();
+            System.Text.RegularExpressions.Regex reg = new System.Text.RegularExpressions.Regex("link\":\"(.*?)\"");
+            return reg.Match(jsonResponse).ToString().Replace("link\":\"", "").Replace("\"", "").Replace("\\/", "/");
         }
+
+        private String GetId(String jsonResponse)
+        {
+            System.Text.RegularExpressions.Regex reg = new System.Text.RegularExpressions.Regex("id\":\"(.*?)\"");
+            return reg.Match(jsonResponse).ToString().Replace("id\":\"", "").Replace("\"", "");
+        }
+
         /// <summary>
         /// Checks to see if there is an image or a collection of images to upload.
         /// </summary>
@@ -201,8 +238,9 @@ namespace Imgur_Uploader
         {
             loadImages();
             int count = imagesToUpload.Count;
+            album = count > 1 ? true : false;
             imagesToUpload.Clear(); //Clear this to unlock the images (can't delete/rename/move without this).
-            return count == 1;
+            return count > 0;
         }
 
         /// <summary>
@@ -220,7 +258,7 @@ namespace Imgur_Uploader
             IDataObject d = Clipboard.GetDataObject();
             if (d.GetDataPresent(DataFormats.FileDrop))
             {
-                string[] copiedFiles = (String[])d.GetData(DataFormats.FileDrop);
+                string[] copiedFiles = (String[]) d.GetData(DataFormats.FileDrop);
                 foreach (string filePath in copiedFiles)
                 {
                     try
@@ -236,6 +274,10 @@ namespace Imgur_Uploader
             }
         }
     }
+
+    /// <summary>
+    /// Extended WebClient that provides the ability to extend the timeout amount.
+    /// </summary>
     public class WebClientEx : WebClient 
     {
         public int timeout;
