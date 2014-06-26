@@ -93,6 +93,7 @@
             this.ShowInTaskbar = false;
             this.Text = "Preview Image";
             this.Load += new System.EventHandler(this.ImagePreview_Load);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.OnClose);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).EndInit();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
