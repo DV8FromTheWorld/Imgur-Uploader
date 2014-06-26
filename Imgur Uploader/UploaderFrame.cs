@@ -99,6 +99,10 @@ namespace Imgur_Uploader
 
         public void ClearImages()
         {
+            foreach (Image i in imagesToUpload)
+            {
+                i.Dispose();
+            }
             imagesToUpload.Clear();
         }
 
@@ -233,7 +237,7 @@ namespace Imgur_Uploader
             UploadButtonStatus(null, null);
             btnBrowser.Enabled = true;
             btnCopyLink.Enabled = true;
-            imagesToUpload.Clear();
+            ClearImages();
         }
 
         private String GetLink(String jsonResponse)
@@ -255,8 +259,8 @@ namespace Imgur_Uploader
         private bool ClipboardContainsImage()
         {
             LoadImages();
-            int count = imagesToUpload.Count;            
-            imagesToUpload.Clear(); //Clear this to unlock the images (can't delete/rename/move without this).
+            int count = imagesToUpload.Count;
+            ClearImages();//Clear this to unlock the images (can't delete/rename/move without this).
             return count > 0;
         }
 
@@ -265,7 +269,7 @@ namespace Imgur_Uploader
         /// </summary>
         private void LoadImages()
         {
-            imagesToUpload.Clear();
+            ClearImages();
             if (Clipboard.ContainsImage())
             {
                 imagesToUpload.Add(Clipboard.GetImage());
