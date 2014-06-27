@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Net;
 
 namespace Imgur_Uploader
 {
@@ -32,9 +33,15 @@ namespace Imgur_Uploader
                 { "image", Convert.ToBase64String(ms.ToArray()) }
             };
 
-            byte[] response = w.UploadValues("https://api.imgur.com/3/image", values);
-            return Encoding.ASCII.GetString(response);
-            
+            try
+            {
+                byte[] response = w.UploadValues("https://api.imgur.com/3/image", values);
+                return Encoding.ASCII.GetString(response);
+            }
+            catch (WebException e)
+            {
+                return getWebError(e.Response);
+            }
         }
 
         public static String CreateAlbum(List<String> imageIds)
@@ -58,8 +65,31 @@ namespace Imgur_Uploader
                 { "ids", ids }
             };
 
-            byte[] response = w.UploadValues("https://api.imgur.com/3/album", values);
-            return Encoding.ASCII.GetString(response);
+            try
+            {
+                byte[] response = w.UploadValues("https://api.imgur.com/3/album", values);
+                return Encoding.ASCII.GetString(response);
+            }
+            catch (WebException e)
+            {
+                return getWebError(e.Response);
+            }
         }
-    }
+
+        private static String getWebError(WebResponse wr)
+        {
+            switch (((HttpWebResponse) wr).StatusCode)
+            {
+                case HttpStatusCode.ServiceUnavailable:
+                    return "ERROR: Service Unavailable.  Check Imgur.com";
+                case HttpStatusCode.RequestTimeout:
+                case HttpStatusCode.GatewayTimeout:
+                    return "ERROR: Upload Timed out. Need Moar Internez";
+                case HttpStatusCode.BadGateway:
+                    return "ERROR: Bad Gateway. Imgur is Overloaded.";
+                default:
+                    return "ERROR:  Unknown error occured.";
+            }
+        }
+    }    
 }

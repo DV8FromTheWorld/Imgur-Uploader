@@ -45,7 +45,15 @@ namespace Imgur_Uploader
                 delegate(object o, DoWorkEventArgs args)
                 {
                     uploading = true;
-                    url = GetLink(Uploader.Upload(imagesToUpload[0]));
+                    String imageResponse = Uploader.Upload(imagesToUpload[0]);
+                    if (!imageResponse.Contains("ERROR"))
+                    {
+                        url = GetLink(imageResponse);
+                    }
+                    else
+                    {
+                        url = imageResponse;
+                    }
                 });
 
             uploader.RunWorkerCompleted += new RunWorkerCompletedEventHandler(
@@ -62,10 +70,28 @@ namespace Imgur_Uploader
                     uploading = true;
                     for (int i = 0; i < imagesToUpload.Count; i++)
                     {
-                        albumIds.Add(GetId(Uploader.Upload(imagesToUpload[i])));
-                        uploaderAlbum.ReportProgress((int)(((double)i / imagesToUpload.Count) * 100));
+                        String imageResponse = Uploader.Upload(imagesToUpload[i]);
+                        if (!imageResponse.Contains("ERROR"))
+                        {
+                            albumIds.Add(GetId(imageResponse));
+                            uploaderAlbum.ReportProgress((int)(((double)i / imagesToUpload.Count) * 100));
+                        }
+                        else
+                        {
+                            url = imageResponse;
+                            break;
+                        }
                     }
-                    url = "https://imgur.com/a/" + GetId(Uploader.CreateAlbum(albumIds));
+
+                    String albumResponse = Uploader.CreateAlbum(albumIds);
+                    if (!albumResponse.Contains("ERROR"))
+                    {
+                        url = "https://imgur.com/a/" + GetId(albumResponse);
+                    }
+                    else
+                    {
+                        url = albumResponse;
+                    }
 
                 });
             uploaderAlbum.ProgressChanged +=new ProgressChangedEventHandler(
@@ -299,7 +325,7 @@ namespace Imgur_Uploader
     /// <summary>
     /// Extended WebClient that provides the ability to extend the timeout amount.
     /// </summary>
-    public class WebClientEx : WebClient 
+    public class WebClientEx : WebClient
     {
         public int timeout;
 
